@@ -1,5 +1,5 @@
 import { AxiosInstance } from "axios";
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 
 import { getTransactionError } from "./errors";
 import { validateTransfer } from "./validate";
@@ -12,6 +12,10 @@ import {
 } from "./common";
 
 export interface TransferRequest {
+  /**
+   * Unique Transfer Reference (UUID v4), will be automatically generated if not explicitly supplied
+   */
+  referenceId?: string;
   /**
    * Amount that will be debited from the payer account.
    */
@@ -114,10 +118,10 @@ export default class Disbursements {
    */
   public transfer({
     callbackUrl,
+    referenceId = uuid(),
     ...payoutRequest
   }: TransferRequest): Promise<string> {
-    return validateTransfer(payoutRequest).then(() => {
-      const referenceId: string = uuid();
+    return validateTransfer({ referenceId, ...payoutRequest }).then(() => {
       return this.client
         .post<void>("/disbursement/v1_0/transfer", payoutRequest, {
           headers: {
